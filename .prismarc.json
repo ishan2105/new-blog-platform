@@ -1,0 +1,7 @@
+{
+  "datasources": {
+    "db": {
+      "url": "mongodb+srv://ishang6664_db_user:Ishan%402105@cluster0.mlfl4ze.mongodb.net/?retryWrites=true&w=majority"
+    }
+  }
+}
