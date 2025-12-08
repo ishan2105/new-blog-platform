@@ -34,14 +34,14 @@ function validateUserData(name?: string, email?: string): { valid: boolean; erro
 }
 
 // Get all users
-export async function getAllUsers(req: NextRequest) {
+export async function getAllUsers() {
   try {
     const p = getPrisma()
-    const users = await p.user.findMany({
+    const users: unknown = await p.user.findMany({
       select: { id: true, name: true, email: true },
     })
     return NextResponse.json(users)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching users:', error)
     return NextResponse.json(
       { error: 'Failed to fetch users' },
@@ -74,7 +74,7 @@ export async function getUserById(id: string) {
     }
 
     return NextResponse.json(user)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching user:', error)
     return NextResponse.json(
       { error: 'Failed to fetch user' },
@@ -127,7 +127,7 @@ export async function createUser(req: NextRequest) {
     })
 
     return NextResponse.json(user, { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating user:', error)
     return NextResponse.json(
       { error: 'Failed to create user' },
@@ -184,7 +184,7 @@ export async function updateUser(req: NextRequest, id: string) {
       }
     }
 
-    const updateData: any = {}
+    const updateData: Record<string, string> = {}
     if (name) updateData.name = name.trim()
     if (email) updateData.email = email.toLowerCase()
 
@@ -196,8 +196,8 @@ export async function updateUser(req: NextRequest, id: string) {
     })
 
     return NextResponse.json(user)
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (error instanceof Object && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -231,8 +231,8 @@ export async function deleteUser(req: NextRequest, id: string) {
       { message: 'User deleted successfully', user: deletedUser },
       { status: 200 }
     )
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if (error instanceof Object && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
