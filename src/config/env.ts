@@ -1,4 +1,3 @@
-// Environment configuration
 export const config = {
   app: {
     name: 'User CRUD Application',

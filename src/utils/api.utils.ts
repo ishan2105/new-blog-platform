@@ -1,5 +1,3 @@
-// Utility functions for API responses and error handling
-
 export interface ApiResponse<T> {
   success: boolean
   data?: T
@@ -12,8 +10,7 @@ export interface PaginationParams {
   limit?: number
 }
 
-// Successful response
-export function successResponse<T>(data: T, message?: string): ApiResponse<T> {
+export function successResponse<T>(data: T): ApiResponse<T> {
   return {
     success: true,
     data,
@@ -21,7 +18,6 @@ export function successResponse<T>(data: T, message?: string): ApiResponse<T> {
   }
 }
 
-// Error response
 export function errorResponse(error: string): ApiResponse<null> {
   return {
     success: false,
