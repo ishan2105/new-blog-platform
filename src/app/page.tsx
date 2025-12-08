@@ -23,8 +23,16 @@ export default function Home() {
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/users')
+      if (!res.ok) {
+        console.error('API error:', res.status, res.statusText)
+        return
+      }
       const data = await res.json()
-      setUsers(data)
+      if (Array.isArray(data)) {
+        setUsers(data)
+      } else {
+        console.error('Invalid data format:', data)
+      }
     } catch (error) {
       console.error('Failed to fetch users:', error)
     }
@@ -46,7 +54,10 @@ export default function Home() {
           setName('')
           setEmail('')
           setShowForm(false)
-          fetchUsers()
+          await fetchUsers()
+        } else {
+          alert('Failed to update user')
+          console.error('Update failed:', res.status)
         }
       } else {
         const res = await fetch('/api/users', {
@@ -58,11 +69,15 @@ export default function Home() {
           setName('')
           setEmail('')
           setShowForm(false)
-          fetchUsers()
+          await fetchUsers()
+        } else {
+          alert('Failed to create user')
+          console.error('Create failed:', res.status)
         }
       }
     } catch (error) {
       console.error('Failed to save user:', error)
+      alert('Error saving user: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
     }
