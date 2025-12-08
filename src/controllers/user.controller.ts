@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/prisma/client'
+import { PrismaClient } from '@prisma/client'
+
+// Lazy load Prisma instance - use singleton pattern
+let prisma: PrismaClient | null = null
+
+function getPrisma() {
+  if (!prisma) {
+    try {
+      prisma = new PrismaClient()
+      console.log('Prisma client initialized successfully')
+    } catch (e) {
+      console.error('Prisma init error:', e)
+      throw e
+    }
+  }
+  return prisma
+}
 
 // Input validation
 function validateEmail(email: string): boolean {
@@ -20,7 +36,8 @@ function validateUserData(name?: string, email?: string): { valid: boolean; erro
 // Get all users
 export async function getAllUsers(req: NextRequest) {
   try {
-    const users = await prisma.user.findMany({
+    const p = getPrisma()
+    const users = await p.user.findMany({
       select: { id: true, name: true, email: true },
     })
     return NextResponse.json(users)
@@ -43,7 +60,8 @@ export async function getUserById(id: string) {
       )
     }
 
-    const user = await prisma.user.findUnique({
+    const p = getPrisma()
+    const user = await p.user.findUnique({
       where: { id },
       select: { id: true, name: true, email: true },
     })
@@ -88,7 +106,8 @@ export async function createUser(req: NextRequest) {
     }
 
     // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
+    const p = getPrisma()
+    const existingUser = await p.user.findUnique({
       where: { email: email.toLowerCase() },
     })
 
@@ -99,7 +118,7 @@ export async function createUser(req: NextRequest) {
       )
     }
 
-    const user = await prisma.user.create({
+    const user = await p.user.create({
       data: {
         name: name.trim(),
         email: email.toLowerCase(),
@@ -149,7 +168,8 @@ export async function updateUser(req: NextRequest, id: string) {
     // Check if new email exists (if email is being updated)
     if (email) {
       const normalizedEmail = email.toLowerCase()
-      const existingUser = await prisma.user.findFirst({
+      const p = getPrisma()
+      const existingUser = await p.user.findFirst({
         where: {
           email: normalizedEmail,
           NOT: { id },
@@ -168,7 +188,8 @@ export async function updateUser(req: NextRequest, id: string) {
     if (name) updateData.name = name.trim()
     if (email) updateData.email = email.toLowerCase()
 
-    const user = await prisma.user.update({
+    const p = getPrisma()
+    const user = await p.user.update({
       where: { id },
       data: updateData,
       select: { id: true, name: true, email: true },
@@ -200,7 +221,8 @@ export async function deleteUser(req: NextRequest, id: string) {
       )
     }
 
-    const deletedUser = await prisma.user.delete({
+    const p = getPrisma()
+    const deletedUser = await p.user.delete({
       where: { id },
       select: { id: true, name: true, email: true },
     })

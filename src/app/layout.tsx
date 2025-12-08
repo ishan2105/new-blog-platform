@@ -22,7 +22,6 @@ export const metadata: Metadata = {
     description: "Complete user management system with authentication",
     type: "website",
   },
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
 };
 
