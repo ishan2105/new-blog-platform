@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
 let prisma: PrismaClient | null = null
@@ -100,7 +100,7 @@ export async function createUser(req: NextRequest) {
     }
 
     const prismaInstance = getPrisma()
-    const existingUserData = await prismaInstance.user.findUnique({
+    const existingUserData = await prismaInstance.user.findFirst({
       where: { email: email.toLowerCase() },
     })
 
@@ -234,3 +234,4 @@ export async function deleteUser(req: NextRequest, id: string) {
     )
   }
 }
+
