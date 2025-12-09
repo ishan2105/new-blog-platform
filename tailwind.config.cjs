@@ -1,4 +1,4 @@
-﻿/* tailwind.config.cjs */
+/* tailwind.config.cjs */
 module.exports = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx}",
