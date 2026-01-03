@@ -68,9 +68,6 @@ export default function Header() {
             <Link href="/about" className="text-gray-300 hover:text-white transition font-light">
               About
             </Link>
-            <Link href="/users" className="hover:text-blue-100 transition">
-              Users
-            </Link>
           </div>
         )}
       </nav>

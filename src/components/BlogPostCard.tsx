@@ -64,28 +64,6 @@ export default function BlogPostCard({
           </div>
         </div>
       </Link>
-          >
-            Read More
-          </a>
-          {showActions && (
-            <>
-              <button
-                onClick={() => onEdit?.(id)}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition font-medium"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-medium disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
     </article>
   )
 }
