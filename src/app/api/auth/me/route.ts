@@ -13,17 +13,20 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        bio: true,
+      }
     })
 
     if (!user) {
       return NextResponse.json(null)
     }
 
-    return NextResponse.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    })
+    return NextResponse.json(user)
   } catch (error) {
     console.error('Auth check error:', error)
     return NextResponse.json(null)

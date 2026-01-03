@@ -8,24 +8,30 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String      @unique
-  password  String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  blogPosts BlogPost[]
-  comments  Comment[]
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String      @unique
+  password      String
+  avatar        String?
+  bio           String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  blogPosts     BlogPost[]
+  comments      Comment[]
+  likes         Like[]
 }
 
 model BlogPost {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
   title     String
+  caption   String?
   content   String
+  image     String?
   excerpt   String?
   author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String      @db.ObjectId
   comments  Comment[]
+  likes     Like[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
@@ -39,4 +45,15 @@ model Comment {
   postId    String      @db.ObjectId
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+}
+
+model Like {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @db.ObjectId
+  post      BlogPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String      @db.ObjectId
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, postId])
 }

@@ -7,12 +7,25 @@ export async function getAllPosts() {
   try {
     const allBlogPosts = await database.blogPost.findMany({
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        },
         comments: {
           include: {
             author: true,
           },
         },
+        likes: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',
@@ -26,11 +39,24 @@ export async function getAllPosts() {
 
 export async function createPost(request: NextRequest) {
   try {
-    const { title, content, excerpt, authorId } = await request.json()
+    const { title, caption, content, image, authorId } = await request.json()
 
-    if (!title || !content || !authorId) {
+    // Get user from session/auth
+    let userId = authorId
+    if (!userId) {
+      const authHeader = request.headers.get('authorization')
+      if (!authHeader) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        )
+      }
+      // In production, verify JWT token here
+    }
+
+    if (!title || !content) {
       return NextResponse.json(
-        { error: 'Title, content, and authorId are required' },
+        { error: 'Title and content are required' },
         { status: 400 }
       )
     }
@@ -38,19 +64,37 @@ export async function createPost(request: NextRequest) {
     const newBlogPost = await database.blogPost.create({
       data: {
         title,
+        caption: caption || null,
         content,
-        excerpt: excerpt || content.substring(0, 150),
+        image: image || null,
+        excerpt: caption || content.substring(0, 150),
         author: {
-          connect: { id: authorId },
+          connect: { id: userId },
         },
       },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true
+          }
+        },
+        comments: true,
+        likes: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
       },
     })
 
     return NextResponse.json(newBlogPost, { status: 201 })
   } catch (error) {
+    console.error('Error creating post:', error)
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
   }
 }
@@ -60,7 +104,14 @@ export async function getPostById(postId: string) {
     const foundBlogPost = await database.blogPost.findUnique({
       where: { id: postId },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true
+          }
+        },
         comments: {
           include: {
             author: true,
@@ -69,6 +120,13 @@ export async function getPostById(postId: string) {
             createdAt: 'desc',
           },
         },
+        likes: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
       },
     })
 
@@ -84,17 +142,27 @@ export async function getPostById(postId: string) {
 
 export async function updatePost(postId: string, request: NextRequest) {
   try {
-    const { title, content, excerpt } = await request.json()
+    const { title, content, caption, image } = await request.json()
 
     const updatedBlogPost = await database.blogPost.update({
       where: { id: postId },
       data: {
         ...(title && { title }),
         ...(content && { content }),
-        ...(excerpt && { excerpt }),
+        ...(caption !== undefined && { caption }),
+        ...(image !== undefined && { image }),
       },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true
+          }
+        },
+        comments: true,
+        likes: true,
       },
     })
 
@@ -110,8 +178,9 @@ export async function deletePost(postId: string) {
       where: { id: postId },
     })
 
-    return NextResponse.json(deletedBlogPost)
+    return NextResponse.json({ success: true, message: 'Post deleted successfully' })
   } catch (error) {
+    console.error('Error deleting post:', error)
     return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 })
   }
 }

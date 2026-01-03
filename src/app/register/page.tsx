@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -12,7 +11,6 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,10 +30,20 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      await register(name, email, password)
-      router.push('/feed')
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      })
+
+      if (res.ok) {
+        router.push('/')
+      } else {
+        const data = await res.json()
+        setError(data.message || 'Registration failed')
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      setError('An error occurred during registration')
     } finally {
       setLoading(false)
     }
