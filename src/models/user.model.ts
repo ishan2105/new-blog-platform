@@ -8,7 +8,7 @@ export interface IUser {
 
 export async function createUser(name: string, email: string): Promise<IUser> {
   return await prisma.user.create({
-    data: { name, email },
+    data: { name, email, password: 'default_password_123' },
     select: { id: true, name: true, email: true },
   })
 }

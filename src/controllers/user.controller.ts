@@ -1,31 +1,29 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-let prisma: PrismaClient | null = null
+let prismaInstance: PrismaClient | null = null
 
-function getPrisma() {
-  if (!prisma) {
+function initializePrismaClient() {
+  if (!prismaInstance) {
     try {
-      prisma = new PrismaClient()
-      console.log('Prisma client initialized successfully')
+      prismaInstance = new PrismaClient()
     } catch (error) {
-      console.error('Prisma initialization error:', error)
       throw error
     }
   }
-  return prisma
+  return prismaInstance
 }
 
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+function isValidEmailAddress(email: string): boolean {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailPattern.test(email)
 }
 
-function validateUserData(name?: string, email?: string): { valid: boolean; error?: string } {
+function checkUserDataValidity(name?: string, email?: string): { valid: boolean; error?: string } {
   if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
     return { valid: false, error: 'Name must be a non-empty string' }
   }
-  if (email !== undefined && !validateEmail(email)) {
+  if (email !== undefined && !isValidEmailAddress(email)) {
     return { valid: false, error: 'Invalid email format' }
   }
   return { valid: true }
@@ -33,13 +31,12 @@ function validateUserData(name?: string, email?: string): { valid: boolean; erro
 
 export async function getAllUsers() {
   try {
-    const prismaInstance = getPrisma()
-    const usersList: unknown = await prismaInstance.user.findMany({
+    const database = initializePrismaClient()
+    const allUsers = await database.user.findMany({
       select: { id: true, name: true, email: true },
     })
-    return NextResponse.json(usersList)
+    return NextResponse.json(allUsers)
   } catch (error: unknown) {
-    console.error('Error fetching users:', error)
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }
@@ -47,31 +44,30 @@ export async function getAllUsers() {
   }
 }
 
-export async function getUserById(id: string) {
+export async function getUserById(userId: string) {
   try {
-    if (!id || typeof id !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return NextResponse.json(
         { error: 'Invalid user ID' },
         { status: 400 }
       )
     }
 
-    const prismaInstance = getPrisma()
-    const user = await prismaInstance.user.findUnique({
-      where: { id },
+    const database = initializePrismaClient()
+    const foundUser = await database.user.findUnique({
+      where: { id: userId },
       select: { id: true, name: true, email: true },
     })
 
-    if (!user) {
+    if (!foundUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(user)
+    return NextResponse.json(foundUser)
   } catch (error: unknown) {
-    console.error('Error fetching user:', error)
     return NextResponse.json(
       { error: 'Failed to fetch user' },
       { status: 500 }
@@ -79,10 +75,10 @@ export async function getUserById(id: string) {
   }
 }
 
-export async function createUser(req: NextRequest) {
+export async function createUser(request: NextRequest) {
   try {
-    const requestBody = await req.json()
-    const { name, email } = requestBody
+    const requestData = await request.json()
+    const { name, email } = requestData
 
     if (!name || !email) {
       return NextResponse.json(
@@ -91,37 +87,37 @@ export async function createUser(req: NextRequest) {
       )
     }
 
-    const dataValidation = validateUserData(name, email)
-    if (!dataValidation.valid) {
+    const validation = checkUserDataValidity(name, email)
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: dataValidation.error },
+        { error: validation.error },
         { status: 400 }
       )
     }
 
-    const prismaInstance = getPrisma()
-    const existingUserData = await prismaInstance.user.findFirst({
+    const database = initializePrismaClient()
+    const existingUser = await database.user.findFirst({
       where: { email: email.toLowerCase() },
     })
 
-    if (existingUserData) {
+    if (existingUser) {
       return NextResponse.json(
         { error: 'Email already exists' },
         { status: 409 }
       )
     }
 
-    const newUser = await prismaInstance.user.create({
+    const createdUser = await database.user.create({
       data: {
         name: name.trim(),
         email: email.toLowerCase(),
+        password: 'default_password_123',
       },
       select: { id: true, name: true, email: true },
     })
 
-    return NextResponse.json(newUser, { status: 201 })
+    return NextResponse.json(createdUser, { status: 201 })
   } catch (error: unknown) {
-    console.error('Error creating user:', error)
     return NextResponse.json(
       { error: 'Failed to create user' },
       { status: 500 }
@@ -129,17 +125,17 @@ export async function createUser(req: NextRequest) {
   }
 }
 
-export async function updateUser(req: NextRequest, id: string) {
+export async function updateUser(request: NextRequest, userId: string) {
   try {
-    if (!id || typeof id !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return NextResponse.json(
         { error: 'Invalid user ID' },
         { status: 400 }
       )
     }
 
-    const requestBody = await req.json()
-    const { name, email } = requestBody
+    const requestData = await request.json()
+    const { name, email } = requestData
 
     if (!name && !email) {
       return NextResponse.json(
@@ -148,25 +144,25 @@ export async function updateUser(req: NextRequest, id: string) {
       )
     }
 
-    const dataValidation = validateUserData(name, email)
-    if (!dataValidation.valid) {
+    const validation = checkUserDataValidity(name, email)
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: dataValidation.error },
+        { error: validation.error },
         { status: 400 }
       )
     }
 
     if (email) {
-      const normalizedEmail = email.toLowerCase()
-      const prismaInstance = getPrisma()
-      const duplicateEmailUser = await prismaInstance.user.findFirst({
+      const normalizedEmailAddress = email.toLowerCase()
+      const database = initializePrismaClient()
+      const userWithSameEmail = await database.user.findFirst({
         where: {
-          email: normalizedEmail,
-          NOT: { id },
+          email: normalizedEmailAddress,
+          NOT: { id: userId },
         },
       })
 
-      if (duplicateEmailUser) {
+      if (userWithSameEmail) {
         return NextResponse.json(
           { error: 'Email already exists' },
           { status: 409 }
@@ -174,18 +170,18 @@ export async function updateUser(req: NextRequest, id: string) {
       }
     }
 
-    const dataToUpdate: Record<string, string> = {}
-    if (name) dataToUpdate.name = name.trim()
-    if (email) dataToUpdate.email = email.toLowerCase()
+    const updateData: Record<string, string> = {}
+    if (name) updateData.name = name.trim()
+    if (email) updateData.email = email.toLowerCase()
 
-    const prismaInstance = getPrisma()
-    const updatedUser = await prismaInstance.user.update({
-      where: { id },
-      data: dataToUpdate,
+    const database = initializePrismaClient()
+    const modifiedUser = await database.user.update({
+      where: { id: userId },
+      data: updateData,
       select: { id: true, name: true, email: true },
     })
 
-    return NextResponse.json(updatedUser)
+    return NextResponse.json(modifiedUser)
   } catch (error: unknown) {
     if (error instanceof Object && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
@@ -193,7 +189,6 @@ export async function updateUser(req: NextRequest, id: string) {
         { status: 404 }
       )
     }
-    console.error('Error updating user:', error)
     return NextResponse.json(
       { error: 'Failed to update user' },
       { status: 500 }
@@ -201,23 +196,23 @@ export async function updateUser(req: NextRequest, id: string) {
   }
 }
 
-export async function deleteUser(req: NextRequest, id: string) {
+export async function deleteUser(request: NextRequest, userId: string) {
   try {
-    if (!id || typeof id !== 'string') {
+    if (!userId || typeof userId !== 'string') {
       return NextResponse.json(
         { error: 'Invalid user ID' },
         { status: 400 }
       )
     }
 
-    const prismaInstance = getPrisma()
-    const deletedUserData = await prismaInstance.user.delete({
-      where: { id },
+    const database = initializePrismaClient()
+    const removedUser = await database.user.delete({
+      where: { id: userId },
       select: { id: true, name: true, email: true },
     })
 
     return NextResponse.json(
-      { message: 'User deleted successfully', user: deletedUserData },
+      { message: 'User deleted successfully', user: removedUser },
       { status: 200 }
     )
   } catch (error: unknown) {
@@ -227,7 +222,6 @@ export async function deleteUser(req: NextRequest, id: string) {
         { status: 404 }
       )
     }
-    console.error('Error deleting user:', error)
     return NextResponse.json(
       { error: 'Failed to delete user' },
       { status: 500 }

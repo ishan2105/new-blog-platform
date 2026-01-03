@@ -8,7 +8,35 @@ datasource db {
 }
 
 model User {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  email String
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String      @unique
+  password  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  blogPosts BlogPost[]
+  comments  Comment[]
+}
+
+model BlogPost {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String
+  excerpt   String?
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String      @db.ObjectId
+  comments  Comment[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Comment {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String      @db.ObjectId
+  post      BlogPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String      @db.ObjectId
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
