@@ -6,31 +6,48 @@ import { useState } from 'react'
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  const navigationCategories = [
+    { label: 'All', href: '/feed' },
+    { label: 'Advertising', href: '/feed?category=advertising' },
+    { label: 'Branding', href: '/feed?category=branding' },
+    { label: 'Creativity', href: '/feed?category=creativity' },
+    { label: 'Marketing', href: '/feed?category=marketing' },
+  ]
+
   return (
-    <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
-      <nav className="max-w-7xl mx-auto px-4 py-4">
+    <header className="bg-black text-white">
+      <nav className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold hover:text-blue-100 transition">
-            📝 BlogHub
+          <Link href="/" className="text-3xl font-serif italic hover:text-gray-300 transition">
+            Draft
           </Link>
           
-          <div className="hidden md:flex gap-6">
-            <Link href="/" className="hover:text-blue-100 transition font-medium">
-              Home
+          <div className="hidden md:flex gap-8">
+            {navigationCategories.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-gray-300 hover:text-white transition font-light"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/about" className="text-gray-300 hover:text-white transition font-light">
+              About
             </Link>
-            <Link href="/blog" className="hover:text-blue-100 transition font-medium">
-              All Posts
-            </Link>
-            <Link href="/dashboard" className="hover:text-blue-100 transition font-medium">
-              Dashboard
-            </Link>
-            <Link href="/users" className="hover:text-blue-100 transition font-medium">
-              Users
+          </div>
+
+          <div className="hidden md:block">
+            <Link
+              href="/create"
+              className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition"
+            >
+              Subscribe
             </Link>
           </div>
 
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-white text-2xl"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             ☰
@@ -38,15 +55,18 @@ export default function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 flex flex-col gap-4">
-            <Link href="/" className="hover:text-blue-100 transition">
-              Home
-            </Link>
-            <Link href="/blog" className="hover:text-blue-100 transition">
-              All Posts
-            </Link>
-            <Link href="/dashboard" className="hover:text-blue-100 transition">
-              Dashboard
+          <div className="md:hidden mt-6 flex flex-col gap-4 pb-4">
+            {navigationCategories.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-gray-300 hover:text-white transition font-light"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/about" className="text-gray-300 hover:text-white transition font-light">
+              About
             </Link>
             <Link href="/users" className="hover:text-blue-100 transition">
               Users

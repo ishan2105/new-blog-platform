@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 
 interface BlogPostCardProps {
@@ -49,35 +50,20 @@ export default function BlogPostCard({
   }
 
   return (
-    <article className="bg-white rounded-lg shadow-md hover:shadow-lg transition border border-gray-200 overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600">
-          {title}
-        </h2>
-        <p className="text-gray-600 mb-4 line-clamp-3">{excerpt}</p>
+    <article className="bg-gray-900 rounded-lg hover:bg-gray-800 transition duration-300 border border-gray-800">
+      <Link href={`/post/${id}`}>
+        <div className="p-8 cursor-pointer">
+          <h2 className="text-xl font-serif italic text-white mb-3 group-hover:text-gray-300 transition line-clamp-2">
+            {title}
+          </h2>
+          <p className="text-gray-400 mb-4 line-clamp-2 text-sm leading-relaxed">{excerpt}</p>
 
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-              {author.name.charAt(0).toUpperCase()}
-            </span>
-            <span className="font-medium">{author.name}</span>
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span className="font-light">{author.name}</span>
+            <span className="font-light">{commentCount} comments</span>
           </div>
-          <span>💬 {commentCount}</span>
         </div>
-
-        <div className="text-xs text-gray-400 mb-4">
-          {new Date(createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </div>
-
-        <div className="flex gap-2">
-          <a
-            href={`/blog/${id}`}
-            className="flex-1 text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
+      </Link>
           >
             Read More
           </a>
